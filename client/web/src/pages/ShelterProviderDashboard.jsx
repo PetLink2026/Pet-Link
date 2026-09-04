@@ -69,27 +69,43 @@ export default function ShelterProviderDashboard({ user, onLogout }) {
   const [selectedBookingId, setSelectedBookingId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('Availability issue');
 
+  const getUserId = () => user?._id || user?.id || '';
+  const getAuthHeaders = () => {
+    const userId = getUserId();
+    const headers = {
+      'Content-Type': 'application/json',
+      'x-requester-id': userId,
+      'x-user-id': userId
+    };
+    if (user?.token) {
+      headers['Authorization'] = `Bearer ${user.token}`;
+    }
+    return headers;
+  };
+
   // Fetch shelter profile
   const fetchProfile = async () => {
     try {
       setLoading(true);
+      const userId = getUserId();
+      if (!userId) return;
       const res = await fetch(`${API_URL}/api/shelter/profile`, {
-        headers: { 'x-requester-id': user._id }
+        headers: getAuthHeaders()
       });
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
         if (data) {
           // Pre-populate fields
-          setShelterName(data.name);
-          setLogo(data.logo);
-          setCoverImage(data.logo);
-          setDescription(data.description);
-          setPhone(data.phone);
-          setEmail(data.email);
-          setAddress(data.address);
-          setCity(data.city);
-          setProvince(data.province);
+          setShelterName(data.name || '');
+          setLogo(data.logo || '');
+          setCoverImage(data.logo || '');
+          setDescription(data.description || '');
+          setPhone(data.phone || '');
+          setEmail(data.email || '');
+          setAddress(data.address || '');
+          setCity(data.city || '');
+          setProvince(data.province || '');
           setShelterTypes(data.shelterTypes || []);
           setAcceptedSpecies(data.acceptedSpecies || []);
           setAcceptedBreeds(data.acceptedBreeds || []);
@@ -115,7 +131,7 @@ export default function ShelterProviderDashboard({ user, onLogout }) {
   };
 
   useEffect(() => {
-    if (user && user._id) {
+    if (user && (user._id || user.id)) {
       fetchProfile();
     }
   }, [user]);
@@ -132,7 +148,7 @@ export default function ShelterProviderDashboard({ user, onLogout }) {
   const fetchServices = async () => {
     try {
       const res = await fetch(`${API_URL}/api/shelter/services`, {
-        headers: { 'x-requester-id': user._id }
+        headers: getAuthHeaders()
       });
       if (res.ok) {
         const data = await res.json();
@@ -146,7 +162,7 @@ export default function ShelterProviderDashboard({ user, onLogout }) {
   const fetchBookings = async () => {
     try {
       const res = await fetch(`${API_URL}/api/shelter/bookings`, {
-        headers: { 'x-requester-id': user._id }
+        headers: getAuthHeaders()
       });
       if (res.ok) {
         const data = await res.json();
@@ -234,10 +250,7 @@ export default function ShelterProviderDashboard({ user, onLogout }) {
 
       const res = await fetch(`${API_URL}/api/shelter/profile`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-requester-id': user._id
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(payload)
       });
 
